@@ -6,7 +6,6 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use frame_support::traits::Nothing;
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
 };
@@ -149,39 +148,14 @@ const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
 pub const EXISTENTIAL_DEPOSIT: Balance = CENTS;
 
 
-// const MAXIMUM_BLOCK_WEIGHT: Weight = WEIGHT_PER_SECOND / 2;
+/// We allow for 0.5 of a second of compute with a 12 second average block time.
+const MAXIMUM_BLOCK_WEIGHT: Weight = WEIGHT_PER_SECOND / 2;
 
 parameter_types! {
-  pub ContractDeposit: Balance = deposit(1, <pallet_contracts::Pallet<Runtime>>::contract_info_size());
-  //pub const DepositPerStorageItem: Balance = deposit(1, 0);
-  //pub const DepositPerStorageByte: Balance = deposit(0, 1);
+  pub const DepositPerStorageItem: Balance = deposit(1, 0);
+  pub const DepositPerStorageByte: Balance = deposit(0, 1);
   pub DeletionWeightLimit: Weight = AVERAGE_ON_INITIALIZE_RATIO * BlockWeights::get().max_block;
-  pub DeletionQueueDepth: u32 = ((DeletionWeightLimit::get() / (
-        <Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
-        <Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
-        )) / 5) as u32;
-  pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
-  // pub const DepositPerContract: Balance = deposit(1, 1);
-  // pub const TombstoneDeposit: Balance  = deposit(0, 1);
-  // pub const SurchargeReward: Balance = deposit(1, 0);
-  // pub const SignedClaimHandicap: BlockNumber = MINUTES *1 ;
-}
 
-impl pallet_contracts::Config for Runtime {
-  type Time = Timestamp;
-  type Randomness = RandomnessCollectiveFlip;
-  type Currency = Balances;
-  type Event = Event;
-  type Call = Call;
-  type CallFilter = Nothing;
-  type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
-  type WeightPrice = pallet_transaction_payment::Pallet<Self>;
-  type ChainExtension = ();
-  type DeletionWeightLimit = DeletionWeightLimit;
-  type DeletionQueueDepth = DeletionQueueDepth;
-  type Schedule = Schedule;
-  type ContractDeposit = ContractDeposit;
-  type CallStack = [pallet_contracts::Frame<Self>; 31];
 }
 
 parameter_types! {
@@ -351,7 +325,6 @@ construct_runtime!(
 		Sudo: pallet_sudo,
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template,
-    Contracts: pallet_contracts::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
